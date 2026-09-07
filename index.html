@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>雷诺曼占卜 · Lenormand Oracle</title>
+<meta name="description" content="雷诺曼三十六张牌占卜：三张牌阵、五张牌阵、十字牌阵、九张牌阵与大牌阵，随机抽牌，依牌意给出吉凶判断。">
+<link rel="preconnect" href="https://miaoda.feishu.cn">
+<link href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ===== 设计令牌 ===== */
+:root{
+  --ink:#141a2c;
+  --ink-2:#1b2340;
+  --ink-3:#26304f;
+  --ivory:#f2e9d4;
+  --ivory-2:#e7dbbd;
+  --gold:#c8a24e;
+  --gold-bright:#e6c87e;
+  --gold-dim:#8a7340;
+  --jade:#5aa97f;
+  --jade-dim:#3f7a5c;
+  --crimson:#c05656;
+  --crimson-dim:#8a3a3a;
+  --steel:#93a0b8;
+  --text:#efe8d8;
+  --text-dim:#a9b0c4;
+  --serif:'Noto Serif SC','Songti SC','SimSun',serif;
+  --sans:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+/* hidden 属性必须始终优先于任何 display 声明，否则遮罩/面板会常驻遮挡页面 */
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);
+  color:var(--text);
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgba(198,162,78,.08), transparent 60%),
+    radial-gradient(900px 500px at -10% 30%, rgba(90,169,127,.06), transparent 55%),
+    var(--ink);
+  min-height:100vh;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--gold-bright);text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+img{max-width:100%;display:block}
+
+/* ===== 顶栏 ===== */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px clamp(16px,4vw,40px);
+  background:rgba(20,26,44,.86);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(200,162,78,.18);
+}
+.brand{display:flex;align-items:center;gap:10px;color:var(--text)}
+.brand svg{width:26px;height:26px;color:var(--gold)}
+.brand-name{font-family:var(--serif);font-weight:700;letter-spacing:.14em;font-size:15px}
+.brand-name span{display:block;font-family:var(--sans);font-weight:400;letter-spacing:.5em;font-size:10px;color:var(--text-dim);margin-top:1px}
+.topnav{display:flex;gap:6px}
+.topnav a{
+  color:var(--text-dim);font-size:14px;padding:10px 14px;border-radius:8px;
+  min-height:44px;display:flex;align-items:center;
+}
+.topnav a:hover,.topnav a.on{color:var(--gold-bright);background:rgba(200,162,78,.1)}
+
+/* ===== 视图容器 ===== */
+.view{display:none}
+.view.on{display:block}
+.wrap{max-width:1080px;margin:0 auto;padding:28px clamp(16px,4vw,40px) 60px}
+
+/* ===== 首页 Hero ===== */
+.hero{
+  position:relative;min-height:64vh;
+  display:flex;align-items:flex-end;
+  background-size:cover;background-position:center 30%;
+  padding:60px clamp(16px,6vw,80px);
+}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,26,44,.35),rgba(20,26,44,.55) 55%,var(--ink) 100%)}
+.hero-inner{position:relative;z-index:2;max-width:640px;padding-bottom:30px}
+.hero-eyebrow{
+  font-size:12px;letter-spacing:.34em;color:var(--gold-bright);
+  text-transform:uppercase;margin-bottom:14px;
+}
+.hero h1{
+  font-family:var(--serif);font-weight:900;font-size:clamp(40px,8vw,72px);
+  letter-spacing:.08em;line-height:1.12;margin-bottom:16px;
+}
+.hero-sub{font-size:clamp(14px,2.4vw,17px);color:rgba(239,232,216,.85);max-width:520px;margin-bottom:26px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:48px;padding:12px 28px;border-radius:10px;
+  font-size:16px;font-weight:500;letter-spacing:.12em;
+  border:1px solid transparent;transition:transform .15s,box-shadow .2s,background .2s;
+}
+.btn:active{transform:scale(.98)}
+.btn-gold{background:linear-gradient(135deg,var(--gold-bright),var(--gold));color:#241d10;box-shadow:0 8px 24px rgba(200,162,78,.3)}
+.btn-gold:hover{box-shadow:0 10px 30px rgba(200,162,78,.45)}
+.btn-ghost{border-color:rgba(200,162,78,.5);color:var(--gold-bright);background:rgba(20,26,44,.4)}
+.btn-ghost:hover{background:rgba(200,162,78,.12)}
+.btn-big{min-height:56px;font-size:17px;padding:14px 40px}
+
+/* ===== 首页牌阵选择 ===== */
+.sec-title{
+  font-family:var(--serif);font-weight:700;font-size:26px;letter-spacing:.1em;
+  margin:8px 0 4px;display:flex;align-items:baseline;gap:14px;
+}
+.sec-title small{font-family:var(--sans);font-weight:400;font-size:13px;color:var(--text-dim);letter-spacing:.2em}
+.sec-sub{color:var(--text-dim);font-size:14px;margin-bottom:26px}
+.spread-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;
+}
+.spread-card{
+  position:relative;display:block;border-radius:16px;padding:22px;
+  background:linear-gradient(165deg,rgba(38,48,79,.75),rgba(20,26,44,.9));
+  border:1px solid rgba(200,162,78,.22);
+  transition:transform .18s,border-color .2s,box-shadow .2s;
+  overflow:hidden;
+}
+.spread-card:hover{transform:translateY(-3px);border-color:rgba(200,162,78,.6);box-shadow:0 14px 34px rgba(0,0,0,.35)}
+.spread-card::before{
+  content:"";position:absolute;right:-34px;top:-34px;width:110px;height:110px;border-radius:50%;
+  background:radial-gradient(circle,rgba(200,162,78,.16),transparent 70%);
+}
+.sc-count{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;letter-spacing:.14em;color:var(--gold-bright);
+  border:1px solid rgba(200,162,78,.4);border-radius:999px;padding:4px 12px;margin-bottom:14px;
+}
+.sc-name{font-family:var(--serif);font-weight:700;font-size:22px;letter-spacing:.06em;margin-bottom:6px}
+.sc-en{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px}
+.sc-desc{font-size:13.5px;color:rgba(239,232,216,.75);min-height:44px}
+.sc-pos{font-size:12px;color:var(--text-dim);margin-top:12px}
+.home-note{margin-top:26px;font-size:13.5px;color:var(--text-dim);text-align:center}
+
+/* ===== 占卜页 ===== */
+.spread-head{margin-bottom:22px}
+.back{
+  display:inline-flex;align-items:center;gap:6px;color:var(--text-dim);font-size:14px;
+  min-height:44px;padding:0 12px;margin-left:-12px;border-radius:8px;
+}
+.back:hover{color:var(--gold-bright)}
+.spread-head h2{font-family:var(--serif);font-weight:700;font-size:28px;letter-spacing:.08em;margin:4px 0 4px}
+.spread-head .s-desc{color:var(--text-dim);font-size:14px}
+.table-area{display:flex;flex-direction:column;align-items:center;gap:26px;padding:26px 0 10px}
+.gt-setup{
+  width:100%;max-width:520px;text-align:center;padding:18px;border-radius:14px;
+  border:1px dashed rgba(200,162,78,.4);background:rgba(200,162,78,.05);
+}
+.gt-setup p{font-size:14px;color:var(--text-dim);margin-bottom:14px}
+.seg{display:inline-flex;border:1px solid rgba(200,162,78,.45);border-radius:10px;overflow:hidden}
+.seg button{
+  min-height:46px;padding:10px 30px;font-size:15px;letter-spacing:.14em;
+  background:transparent;color:var(--text-dim);border:none;transition:background .2s,color .2s;
+}
+.seg button.on{background:var(--gold);color:#241d10;font-weight:600}
+/* 洗牌动画：牌堆 */
+.deck-stage{
+  display:flex;align-items:center;justify-content:center;gap:18px;
+  padding:10px 0;
+}
+.pile{position:relative;width:104px;height:148px}
+.pile .pcard{
+  position:absolute;inset:0;border-radius:10px;
+  background:radial-gradient(circle at 32% 26%,#2a3560,#161d36 72%);
+  border:2px solid var(--gold);
+  box-shadow:0 6px 16px rgba(0,0,0,.4);
+}
+.pile.shaking .pcard{animation:shuffle .5s ease-in-out infinite alternate}
+.pile.shaking .pcard:nth-child(1){transform:rotate(-4deg) translateX(-16px);animation-delay:.05s}
+.pile.shaking .pcard:nth-child(2){transform:rotate(-2deg) translateX(-8px);animation-delay:.12s}
+.pile.shaking .pcard:nth-child(3){transform:rotate(0) translateX(0);animation-delay:.19s}
+.pile.shaking .pcard:nth-child(4){transform:rotate(2deg) translateX(8px);animation-delay:.26s}
+.pile.shaking .pcard:nth-child(5){transform:rotate(4deg) translateX(16px);animation-delay:.33s}
+@keyframes shuffle{
+  from{translate:0 0}
+  to{translate:0 -7px}
+}
+.shuffle-label{font-size:14px;letter-spacing:.3em;color:var(--gold-bright);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+
+/* ===== 卡牌 ===== */
+.cards-area{width:100%;display:flex;justify-content:center}
+.cards-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:flex-start}
+.card{
+  width:150px;perspective:1000px;cursor:pointer;
+  transition:transform .18s;
+}
+.card:hover{transform:translateY(-4px)}
+.card-inner{position:relative;width:100%;aspect-ratio:5/7;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.4,.2,.2,1)}
+.card.flipped .card-inner{transform:rotateY(180deg)}
+.card-face,.card-back{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px}
+.card-back{
+  background:radial-gradient(circle at 32% 26%,#2a3560,#161d36 72%);
+  border:2px solid var(--gold);
+  box-shadow:0 8px 20px rgba(0,0,0,.45);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+}
+.back-star{width:58px;height:58px;color:var(--gold-bright);opacity:.9}
+.back-label{font-size:8.5px;letter-spacing:.34em;color:var(--gold);text-transform:uppercase}
+.card-face{
+  background:linear-gradient(160deg,var(--ivory),var(--ivory-2));
+  border:1px solid #b8a06a;
+  box-shadow:0 8px 20px rgba(0,0,0,.4),inset 0 0 0 3px rgba(255,255,255,.35);
+  padding:9px;
+}
+.corner{position:absolute;font-size:11px;line-height:1.15;font-weight:700;color:#7a5c2e;font-family:var(--serif)}
+.corner.tl{top:7px;left:8px;text-align:center}
+.corner.br{bottom:7px;right:8px;transform:rotate(180deg);text-align:center}
+.corner .suit-s{font-size:12px;display:block}
+.card-body{
+  height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  text-align:center;padding:14px 4px 4px;
+}
+.c-no{font-family:var(--serif);font-weight:700;font-size:24px;line-height:1;color:#8a6f3c}
+.c-suit{font-size:32px;line-height:1}
+.c-name{font-family:var(--serif);font-weight:700;font-size:15.5px;line-height:1.35;color:#33281a}
+.c-latin{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#8a6f3c}
+.suit-red{color:#a03a34}
+.suit-black{color:#333a52}
+/* 小型卡（十字/九张/大牌阵） */
+.card.mini{width:118px}
+.card.mini .c-no{font-size:19px}
+.card.mini .c-suit{font-size:24px}
+.card.mini .c-name{font-size:12.5px}
+.card.mini .c-latin{display:none}
+.card.tiny{width:auto}
+.card.tiny .c-name{font-size:10.5px}
+.card.tiny .c-no{font-size:15px}
+.card.tiny .c-suit{font-size:18px}
+.card.tiny .corner{display:none}
+/* 十字牌阵网格 */
+.cross-grid{
+  display:grid;grid-template-columns:repeat(3,auto);grid-template-rows:auto auto auto;
+  gap:12px;justify-content:center;align-items:center;
+}
+.cross-grid .card{width:120px}
+.cross-grid .cell{display:flex;flex-direction:column;align-items:center;gap:6px}
+.cross-grid .pos-label{font-size:11px;color:var(--text-dim);letter-spacing:.1em}
+.cell.c-top{grid-column:2;grid-row:1}
+.cell.c-mid{grid-column:2;grid-row:2}
+.cell.c-bottom{grid-column:2;grid-row:3}
+.cell.c-left{grid-column:1;grid-row:2}
+.cell.c-right{grid-column:3;grid-row:2}
+/* 九张牌阵网格 */
+.nine-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:520px;margin:0 auto}
+.nine-grid .cell{display:flex;flex-direction:column;align-items:center;gap:6px}
+.nine-grid .card{width:100%;max-width:150px}
+/* 大牌阵网格 */
+.gt-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;max-width:1080px;width:100%}
+.gt-grid .card{width:100%}
+.gt-grid .card .c-name{font-size:11px}
+.gt-grid .card .c-no{font-size:14px}
+.gt-grid .card .c-suit{font-size:16px}
+.gt-grid .card .c-latin,.gt-grid .card .corner{display:none}
+.card.qmark{box-shadow:0 0 0 3px var(--gold),0 0 18px rgba(200,162,78,.55)}
+.card.near{box-shadow:0 0 0 2px rgba(90,169,127,.75),0 0 12px rgba(90,169,127,.35)}
+.pos-tag{
+  display:inline-block;font-size:11px;letter-spacing:.08em;color:var(--gold-bright);
+  background:rgba(200,162,78,.14);border:1px solid rgba(200,162,78,.35);
+  border-radius:999px;padding:2px 10px;white-space:nowrap;
+}
+.gt-legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;font-size:12.5px;color:var(--text-dim);margin-top:14px}
+.gt-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* ===== 解读区 ===== */
+.result{margin-top:36px;display:flex;flex-direction:column;gap:22px}
+.verdict{
+  border-radius:18px;padding:24px;
+  background:linear-gradient(160deg,rgba(38,48,79,.8),rgba(20,26,44,.95));
+  border:1px solid rgba(200,162,78,.3);
+}
+.verdict-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.v-label{font-family:var(--serif);font-weight:900;font-size:26px;letter-spacing:.14em}
+.v-label.lucky{color:var(--jade)}
+.v-label.risk{color:var(--crimson)}
+.v-label.flat{color:var(--steel)}
+.v-counts{font-size:13px;color:var(--text-dim);display:flex;gap:14px;flex-wrap:wrap}
+.v-counts b{font-weight:600}
+.v-counts .g{color:var(--jade)}
+.v-counts .n{color:var(--steel)}
+.v-counts .r{color:var(--crimson)}
+.meter{height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:14px}
+.meter-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--crimson),var(--steel) 45%,var(--jade));transition:width 1s ease}
+.v-text{font-size:15px;color:rgba(239,232,216,.9)}
+.v-text+.v-text{margin-top:8px}
+.combos{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.combo-tag{
+  font-size:12.5px;border-radius:999px;padding:6px 14px;
+  background:rgba(90,169,127,.12);border:1px solid rgba(90,169,127,.4);color:#9fd4b7;
+}
+.advice{margin-top:16px;padding-top:14px;border-top:1px dashed rgba(200,162,78,.3)}
+.advice h4{font-size:13px;letter-spacing:.2em;color:var(--gold-bright);margin-bottom:8px}
+.advice ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.advice li{font-size:14px;color:rgba(239,232,216,.85);padding-left:18px;position:relative}
+.advice li::before{content:"";position:absolute;left:2px;top:.62em;width:8px;height:8px;border-radius:50%;background:var(--gold)}
+/* 位置解读 */
+.interpret-list{display:flex;flex-direction:column;gap:14px}
+.interpret-item{
+  display:flex;gap:16px;align-items:flex-start;
+  border-radius:16px;padding:18px;
+  background:rgba(255,255,255,.035);border:1px solid rgba(200,162,78,.18);
+  border-left-width:4px;
+}
+.interpret-item .card{flex:none}
+.it-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.it-pos{font-family:var(--serif);font-weight:700;font-size:17px;letter-spacing:.06em}
+.it-name{font-size:15px;color:var(--text-dim)}
+.badge{
+  font-size:11px;font-weight:600;letter-spacing:.14em;border-radius:999px;padding:3px 12px;
+}
+.badge.g{background:rgba(90,169,127,.16);color:#8fd0ac;border:1px solid rgba(90,169,127,.5)}
+.badge.r{background:rgba(192,86,86,.16);color:#e39a9a;border:1px solid rgba(192,86,86,.5)}
+.badge.n{background:rgba(147,160,184,.14);color:#b9c2d6;border:1px solid rgba(147,160,184,.45)}
+.badge.pg{background:rgba(90,169,127,.10);color:#79b898;border:1px solid rgba(90,169,127,.35)}
+.badge.pr{background:rgba(192,86,86,.10);color:#cf8383;border:1px solid rgba(192,86,86,.35)}
+.it-kw{font-size:12.5px;color:var(--gold-bright);margin-bottom:6px;letter-spacing:.04em}
+.it-meaning{font-size:14px;color:rgba(239,232,216,.85)}
+.it-posm{font-size:12px;color:var(--text-dim);margin-bottom:2px}
+.result-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+
+/* ===== 牌意速查 ===== */
+.lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:12px;margin-top:20px}
+.lib-grid .card{width:100%}
+.lib-grid .card .c-name{font-size:11.5px}
+.lib-grid .card .c-no{font-size:16px}
+.lib-grid .card .c-suit{font-size:20px}
+.lib-grid .card .c-latin,.lib-grid .card .corner{display:none}
+
+/* ===== 弹窗 ===== */
+.modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop{position:absolute;inset:0;background:rgba(8,11,22,.78);backdrop-filter:blur(4px)}
+.modal-box{
+  position:relative;width:100%;max-width:440px;max-height:86vh;overflow-y:auto;
+  border-radius:20px;padding:26px;
+  background:linear-gradient(170deg,#232c4d,#151c33);
+  border:1px solid rgba(200,162,78,.45);
+  box-shadow:0 24px 60px rgba(0,0,0,.55);
+}
+.m-head{display:flex;gap:18px;align-items:center;margin-bottom:18px}
+.m-head .card{width:96px;cursor:default}
+.m-head .card:hover{transform:none}
+.m-title{font-family:var(--serif);font-weight:700;font-size:24px;letter-spacing:.08em;line-height:1.3}
+.m-title small{display:block;font-family:var(--sans);font-weight:400;font-size:12px;color:var(--text-dim);letter-spacing:.22em;text-transform:uppercase;margin-top:4px}
+.m-no{font-size:13px;color:var(--gold-bright);margin-top:6px;letter-spacing:.08em}
+.m-kw{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.m-kw span{font-size:12px;border-radius:999px;padding:4px 12px;background:rgba(200,162,78,.12);border:1px solid rgba(200,162,78,.35);color:var(--gold-bright)}
+.m-sec{margin-bottom:14px}
+.m-sec h5{font-size:12px;letter-spacing:.22em;color:var(--text-dim);margin-bottom:4px}
+.m-sec p{font-size:14px;color:rgba(239,232,216,.88)}
+.m-close{
+  position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;
+  border:1px solid rgba(200,162,78,.4);background:transparent;color:var(--text-dim);
+  font-size:18px;display:flex;align-items:center;justify-content:center;
+}
+.m-close:hover{color:var(--gold-bright);border-color:var(--gold)}
+
+/* ===== 页脚 ===== */
+footer{border-top:1px solid rgba(200,162,78,.15);padding:26px clamp(16px,4vw,40px);text-align:center;font-size:12.5px;color:var(--text-dim)}
+footer a{color:var(--gold-bright)}
+
+/* ===== 响应式 ===== */
+@media (max-width:768px){
+  .hero{min-height:56vh;padding:48px 20px 40px}
+  .card{width:106px}
+  .card .c-no{font-size:18px}
+  .card .c-suit{font-size:24px}
+  .card .c-name{font-size:12.5px}
+  .card .corner{font-size:9px}
+  .card.mini{width:86px}
+  .card.mini .c-no{font-size:15px}
+  .card.mini .c-suit{font-size:19px}
+  .card.mini .c-name{font-size:10.5px}
+  .cards-row{gap:10px}
+  .cross-grid{grid-template-columns:repeat(3,96px);gap:8px}
+  .cross-grid .card{width:96px}
+  .nine-grid{gap:8px}
+  .nine-grid .card .c-name{font-size:10px}
+  .interpret-item{flex-direction:column;gap:12px;padding:14px}
+  .interpret-item .card{width:88px}
+  .gt-grid{grid-template-columns:repeat(4,1fr);gap:6px}
+  .gt-grid .card .c-name{font-size:9px}
+  .gt-grid .card .c-no{font-size:11px}
+  .gt-grid .card .c-suit{font-size:13px}
+  .lib-grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:10px}
+  .lib-grid .card .c-name{font-size:9.5px}
+  .topbar{flex-wrap:wrap;gap:6px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .card-inner{transition:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 顶栏 ===== -->
+<header class="topbar">
+  <a class="brand" href="#home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 3v4.2M12 16.8V21M3 12h4.2M16.8 12H21M5.6 5.6l3 3M15.4 15.4l3 3M18.4 5.6l-3 3M8.6 15.4l-3 3"/></svg>
+    <span class="brand-name">LENORMAND<span>雷诺曼占卜</span></span>
+  </a>
+  <nav class="topnav">
+    <a href="#home" data-nav="home">选牌阵</a>
+    <a href="#library" data-nav="library">牌意速查</a>
+  </nav>
+</header>
+
+<!-- ===== 首页 ===== -->
+<section id="view-home" class="view">
+  <div class="hero" style="background-image:url('https://aka.doubaocdn.com/s/HtkQ7Zp1LS')">
+    <div class="hero-inner">
+      <p class="hero-eyebrow">Mademoiselle Lenormand · 三十六张牌的智慧</p>
+      <h1>雷诺曼占卜</h1>
+      <p class="hero-sub">洗牌、抽牌，让三十六张预言卡牌为你揭开命运的线索。选一副牌阵，问一个你最关心的问题。</p>
+      <a class="btn btn-gold btn-big" href="#spread?t=3">开始占卜</a>
+    </div>
+  </div>
+  <div class="wrap">
+    <h2 class="sec-title">选择牌阵<small>SELECT A SPREAD</small></h2>
+    <p class="sec-sub">从简到繁，按你想了解的程度选择。抽牌前，先在心中默念你的问题。</p>
+    <div class="spread-grid" id="spread-grid"></div>
+    <p class="home-note">想逐张了解牌意？前往 <a href="#library">三十六张牌意速查</a>。</p>
+  </div>
+</section>
+
+<!-- ===== 占卜页 ===== -->
+<section id="view-spread" class="view">
+  <div class="wrap">
+    <div class="spread-head">
+      <a class="back" href="#home">‹ 返回选牌阵</a>
+      <h2 id="s-name"></h2>
+      <p class="s-desc" id="s-desc"></p>
+    </div>
+    <div id="gt-setup" class="gt-setup" hidden>
+      <p>大牌阵会以你的代表牌定位整局：请选择你的性别</p>
+      <div class="seg" id="seg-gender">
+        <button data-g="female" type="button">女性</button>
+        <button data-g="male" type="button">男性</button>
+      </div>
+    </div>
+    <div class="table-area">
+      <button id="btn-draw" class="btn btn-gold btn-big" type="button">洗牌 · 抽牌</button>
+      <div id="deck-stage" class="deck-stage" hidden>
+        <div class="pile" id="pile">
+          <div class="pcard"></div><div class="pcard"></div><div class="pcard"></div><div class="pcard"></div><div class="pcard"></div>
+        </div>
+        <div class="shuffle-label">洗牌中</div>
+      </div>
+      <div id="cards-area" class="cards-area"></div>
+    </div>
+    <div id="result" class="result" hidden></div>
+    <div class="result-actions" id="result-actions" hidden>
+      <button class="btn btn-gold" id="btn-redraw" type="button">重新抽牌</button>
+      <a class="btn btn-ghost" href="#home">换个牌阵</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 牌意速查 ===== -->
+<section id="view-library" class="view">
+  <div class="wrap">
+    <h2 class="sec-title">三十六张牌意速查<small>THE 36 CARDS</small></h2>
+    <p class="sec-sub">雷诺曼共三十六张牌，每张牌都对应一张扑克牌。点击任意牌查看完整解读。</p>
+    <div class="lib-grid" id="lib-grid"></div>
+  </div>
+</section>
+
+<!-- ===== 牌意弹窗 ===== -->
+<div id="modal" class="modal" hidden>
+  <div class="modal-backdrop" id="modal-backdrop"></div>
+  <div class="modal-box" id="modal-box"></div>
+</div>
+
+<footer>
+  <p>雷诺曼占卜 · 结果仅供参考与自我反思，不替代专业医疗、法律或财务意见。</p>
+</footer>
+
+<script>
+"use strict";
+/* ============ 三十六张雷诺曼牌数据 ============ */
+const SUIT_RED = ["♥","♦"];
+const CARDS = [
+{n:1,name:"骑士",latin:"Rider",suit:"♥",code:"9",pol:1,kw:"消息 · 行动 · 快速进展 · 来访",
+ meaning:"一匹快马带来消息与变化，象征进展神速、主动出击。代表新消息、快递与拜访，或一个需要快速行动的机会。",
+ love:"对方可能主动联系你，或有新缘分快速出现。",career:"好消息传来，项目加速，出差与外勤有利。",health:"恢复较快，注意别过度消耗。",advice:"抓住时机，迅速行动，不要犹豫。"},
+{n:2,name:"三叶草",latin:"Clover",suit:"♦",code:"6",pol:1,kw:"幸运 · 小确幸 · 机会 · 短暂",
+ meaning:"小小的幸运符号，代表转瞬即逝的好运与机会。事情比预期顺利，但要留意它的短暂性。",
+ love:"轻松愉快的缘分，可能是一段短暂而甜蜜的相遇。",career:"小机遇、低成本试水，值得一试。",health:"小病小痛很快过去。",advice:"抓住眼前的小机会，别错过，也别指望它长久。"},
+{n:3,name:"船",latin:"Ship",suit:"♠",code:"10",pol:0.5,kw:"旅行 · 远方 · 迁移 · 变化",
+ meaning:"一艘远航的船，代表远方、旅行、迁移与生活方式的转变。事物正在向新的方向流动。",
+ love:"异地恋、远距离缘分，或关系进入新阶段。",career:"外派、出海、异地业务，向外发展有利。",health:"注意水土不服，出行宜提前规划。",advice:"勇于走向远方，变化带来成长。"},
+{n:4,name:"房屋",latin:"House",suit:"♥",code:"K",pol:1,kw:"家庭 · 稳定 · 安全感 · 根基",
+ meaning:"安定的家，象征家庭、房产、安全感与稳固的根基。回归内在，关注家人与居住环境。",
+ love:"关系稳定，适合谈婚论嫁、同居安家。",career:"公司与岗位稳固，适合深耕而非跳槽。",health:"居家休养有利恢复。",advice:"稳固现有基础，先安内再攘外。"},
+{n:5,name:"树木",latin:"Tree",suit:"♥",code:"7",pol:0,kw:"健康 · 成长 · 根基 · 缓慢",
+ meaning:"深根的大树，代表健康、生命力与长期成长。事情发展缓慢但扎实，需要耐心。",
+ love:"感情需要慢慢经营，根基越深越稳。",career:"长期项目、修炼内功，见效慢但持久。",health:"重点关注身体状况，适合养生调理。",advice:"耐心浇灌，长远规划，急不得。"},
+{n:6,name:"云朵",latin:"Clouds",suit:"♣",code:"K",pol:-1,kw:"混乱 · 困惑 · 犹豫 · 不明朗",
+ meaning:"阴云笼罩，象征迷茫、混乱与不确定。真相被遮蔽，容易误判，需要警惕。",
+ love:"关系模糊不清，可能有隐瞒或误会。",career:"方向不明，信息混乱，谨防骗局。",health:"心理压力大，情绪低落。",advice:"等云开雾散再做决定，不要贸然行动。"},
+{n:7,name:"蛇",latin:"Snake",suit:"♣",code:"Q",pol:-1,kw:"欺骗 · 诱惑 · 背叛 · 复杂",
+ meaning:"蛇象征隐藏的欺骗、诱惑与复杂关系。看似平静的表面下暗藏算计。",
+ love:"警惕第三者与不真诚，感情里有弯弯绕。",career:"职场斗争，谨防小人，合同要看清楚。",health:"注意慢性病或隐疾。",advice:"保持警惕，别轻信，把主动权握在自己手里。"},
+{n:8,name:"棺材",latin:"Coffin",suit:"♦",code:"9",pol:-1,kw:"结束 · 停滞 · 转化 · 重生",
+ meaning:"棺材代表一个阶段的结束与停滞。旧的必须死去，新的才能诞生——既是终结，也是转化。",
+ love:"一段关系走向结束，或进入冷淡期。",career:"项目终止、职位变动，旧模式行不通。",health:"注意身体发出的警示，及时检查。",advice:"允许告别，完成转化，别死守旧局。"},
+{n:9,name:"花束",latin:"Bouquet",suit:"♠",code:"Q",pol:1,kw:"礼物 · 邀请 · 喜悦 · 赞美",
+ meaning:"一束鲜花，代表礼物、邀请、愉悦与赞美。人际中充满善意与美好。",
+ love:"甜蜜的邀约与礼物，关系升温。",career:"好消息、获奖、被认可，贵人送礼。",health:"状态良好，心情愉悦。",advice:"接受善意，也慷慨给出你的好。"},
+{n:10,name:"镰刀",latin:"Scythe",suit:"♦",code:"J",pol:-1,kw:"突然 · 切断 · 危险 · 决断",
+ meaning:"锋利的镰刀，象征突然的变化、切断与果断。意外可能发生，也代表当断则断。",
+ love:"突然的决裂或快刀斩乱麻。",career:"裁员、项目被砍，或果断止损。",health:"注意意外受伤，小心锋利物品。",advice:"果断做决定，但先保护好自己。"},
+{n:11,name:"鞭子",latin:"Whip",suit:"♣",code:"J",pol:-1,kw:"冲突 · 争吵 · 重复 · 激情",
+ meaning:"鞭子代表冲突、争吵与反复。同样的问题一再上演，也可能是强烈的激情。",
+ love:"争吵频繁，激情与矛盾并存。",career:"口舌是非、竞争激烈，压力大。",health:"注意神经紧张与肌肉劳损。",advice:"停下来，打破重复循环，别硬碰硬。"},
+{n:12,name:"小鸟",latin:"Birds",suit:"♦",code:"7",pol:0,kw:"交谈 · 焦虑 · 快速消息 · 叽喳",
+ meaning:"叽喳的小鸟，象征交谈、沟通与焦虑的碎碎念。信息快速流动，也可能让人心烦。",
+ love:"需要好好沟通，别让误会积累。",career:"电话会议、消息不断，信息量大。",health:"焦虑、失眠，心神不宁。",advice:"把话说清楚，给大脑降噪。"},
+{n:13,name:"小孩",latin:"Child",suit:"♠",code:"J",pol:1,kw:"新开始 · 纯真 · 年轻 · 信任",
+ meaning:"纯真的孩子，象征新开始、新项目与单纯的信任。带着好奇心出发。",
+ love:"新恋情萌芽，或关系回归纯粹。",career:"新项目、新手好运，从零开始也无妨。",health:"整体不错，保持活力。",advice:"用孩子般的信任与好奇开始。"},
+{n:14,name:"狐狸",latin:"Fox",suit:"♣",code:"9",pol:-0.5,kw:"狡猾 · 欺骗 · 谋略 · 工作",
+ meaning:"狐狸代表狡猾、算计与职场谋略。注意别被骗，也提醒你聪明地保护自己。",
+ love:"对方可能有所保留，别太天真。",career:"竞争与心机并存，做事留一手。",health:"留意隐藏的不适。",advice:"多留个心眼，但别玩火。"},
+{n:15,name:"熊",latin:"Bear",suit:"♣",code:"10",pol:0.5,kw:"力量 · 保护 · 权威 · 占有",
+ meaning:"熊象征力量、保护与权威。有人罩着你，也可能代表占有欲与强势。",
+ love:"另一半有保护欲，但也可能太强势。",career:"贵人支持，权力与资源在手。",health:"注意体重与饮食过量。",advice:"善用力量保护重要的人，别让占有变成控制。"},
+{n:16,name:"星星",latin:"Stars",suit:"♥",code:"6",pol:1,kw:"希望 · 灵感 · 目标 · 指引",
+ meaning:"闪亮的星星，代表希望、灵感与清晰的指引。心愿有望实现，方向明朗。",
+ love:"美好的期许，关系充满希望。",career:"灵感迸发，目标清晰，适合规划未来。",health:"身心充满能量。",advice:"跟随灵感，相信你的目标会实现。"},
+{n:17,name:"鹳",latin:"Stork",suit:"♥",code:"Q",pol:0.5,kw:"变化 · 迁徙 · 新生 · 转机",
+ meaning:"鹳鸟带来变化与新生，象征搬家、职位变动与生活的新阶段。变化是积极的。",
+ love:"关系升级（订婚、同居、新阶段）或重新开始。",career:"岗位调整、跳槽、搬迁，积极变化。",health:"身体在更新，恢复力增强。",advice:"欢迎变化，它正把你带向更好。"},
+{n:18,name:"狗",latin:"Dog",suit:"♥",code:"10",pol:1,kw:"忠诚 · 友谊 · 支持 · 信任",
+ meaning:"忠实的狗，象征真诚的朋友、忠诚的支持与可靠的关系。有人值得信赖。",
+ love:"忠诚的爱，值得托付的关系。",career:"靠谱的伙伴与团队，互帮互助。",health:"身边有照顾你的人。",advice:"珍惜忠诚的关系，你也以诚相待。"},
+{n:19,name:"高塔",latin:"Tower",suit:"♠",code:"6",pol:-0.5,kw:"孤独 · 权威机构 · 隔离 · 自立",
+ meaning:"高塔象征孤独、权威机构与独立。可能需要独自面对，或与体制打交道。",
+ love:"关系疏离、异地，或需要独立空间。",career:"大机构、银行或政府相关，流程繁琐。",health:"注意骨骼脊椎，别太孤独压抑。",advice:"独立是礼物，但别把自己锁在塔里。"},
+{n:20,name:"花园",latin:"Garden",suit:"♠",code:"8",pol:1,kw:"社交 · 公众 · 聚会 · 人脉",
+ meaning:"繁花盛开的花园，象征社交、公众场合与人脉。你处于人群之中，机会在交流里。",
+ love:"通过社交认识缘分，或公开恋情。",career:"人脉、发布会、社交场合带来机会。",health:"心情愉悦，多接触自然。",advice:"走出去，多见人，机会在人群里。"},
+{n:21,name:"山",latin:"Mountain",suit:"♣",code:"8",pol:-1,kw:"障碍 · 延迟 · 挑战 · 停滞",
+ meaning:"巍峨的大山，象征阻碍、延迟与难以逾越的挑战。事情暂时推不动。",
+ love:"有阻力，误会或现实阻碍，进展缓慢。",career:"瓶颈、审批卡住、竞争强，需要绕路。",health:"康复缓慢，别心急。",advice:"别硬闯，找路绕过去，或等待时机。"},
+{n:22,name:"岔路",latin:"Crossroads",suit:"♦",code:"Q",pol:0,kw:"选择 · 决策 · 交叉口 · 犹豫",
+ meaning:"岔路口象征人生的选择与决策。方向未定，需要你做出取舍。",
+ love:"面临选择，或多角关系的拉扯。",career:"跳槽、转行、多选项，需要认真权衡。",health:"生活方式的选择影响身体。",advice:"列出利弊，遵从内心做决定。"},
+{n:23,name:"老鼠",latin:"Mice",suit:"♣",code:"7",pol:-1,kw:"损耗 · 焦虑 · 流失 · 小损失",
+ meaning:"啃噬的老鼠，象征损耗、流失与焦虑。精力、金钱或时间在被一点点消耗。",
+ love:"感情被小事消耗，信任在流失。",career:"成本超支、客户流失、细节出错。",health:"免疫力下降，注意卫生与压力。",advice:"找出漏洞，及时止损，别让小问题变大。"},
+{n:24,name:"心",latin:"Heart",suit:"♥",code:"J",pol:1,kw:"爱情 · 情感 · 喜悦 · 真诚",
+ meaning:"炽热的心，象征爱情、情感与真诚。一切与爱有关，情感充沛。",
+ love:"浓烈的爱与真心，关系甜蜜。",career:"做热爱的事，同事关系融洽。",health:"心脏与情绪，保持愉快。",advice:"跟随真心，让爱流动起来。"},
+{n:25,name:"戒指",latin:"Ring",suit:"♦",code:"A",pol:1,kw:"承诺 · 合同 · 结合 · 循环",
+ meaning:"戒指象征承诺、契约与结合。订婚、签约、长期关系都与此相关。",
+ love:"订婚、结婚、承诺，关系走向稳定。",career:"签约、合作达成，长期合同。",health:"注意循环系统，规律作息。",advice:"郑重许下承诺，也认真履行。"},
+{n:26,name:"书本",latin:"Book",suit:"♦",code:"10",pol:0,kw:"秘密 · 学习 · 隐藏 · 未知",
+ meaning:"合上的书，象征秘密、隐藏的知识与学习。真相尚未翻开，需要去探索。",
+ love:"对方有所保留，或感情还有未知面。",career:"学习深造、研究，信息未公开。",health:"留意体检报告与未查明的症状。",advice:"保持好奇，主动翻开未知。"},
+{n:27,name:"信件",latin:"Letter",suit:"♠",code:"7",pol:0.5,kw:"信息 · 文书 · 通知 · 沟通",
+ meaning:"一封信，象征书面信息、通知与沟通。消息即将抵达，多为正式文书。",
+ love:"情书与信息往来，或正式表白。",career:"邮件、合同、offer、通知。",health:"体检报告、病历文书。",advice:"留意信箱与消息，重要通知在路上。"},
+{n:28,name:"男人",latin:"Man",suit:"♥",code:"A",pol:0,kw:"男性 · 提问者 · 行动 · 阳面",
+ meaning:"代表一位男性——通常是提问者本人（若为男性）或身边重要的男人。象征理性与行动。",
+ love:"伴侣、心仪对象，或你自己的能量。",career:"男性贵人、上司或竞争对手。",health:"关注男性相关健康。",advice:"审视自己或身边男性的角色与状态。"},
+{n:29,name:"女人",latin:"Woman",suit:"♠",code:"A",pol:0,kw:"女性 · 提问者 · 直觉 · 阴面",
+ meaning:"代表一位女性——通常是提问者本人（若为女性）或身边重要的女人。象征直觉与感性。",
+ love:"伴侣、情敌，或你自己的能量。",career:"女性贵人、同事或竞争对手。",health:"关注女性相关健康。",advice:"审视自己或身边女性的角色与状态。"},
+{n:30,name:"百合",latin:"Lily",suit:"♠",code:"K",pol:1,kw:"平静 · 成熟 · 和谐 · 纯粹",
+ meaning:"圣洁的百合，象征平静、成熟与和谐。岁月静好，关系纯粹。",
+ love:"成熟的爱情，和谐有品质。",career:"德高望重，行业前辈护持。",health:"状态平和，注意睡眠。",advice:"追求品质与和谐，慢即是美。"},
+{n:31,name:"太阳",latin:"Sun",suit:"♦",code:"A",pol:1,kw:"成功 · 活力 · 光明 · 荣耀",
+ meaning:"耀眼的太阳，象征成功、活力与光明。一切向好，充满能量与荣耀。",
+ love:"阳光般温暖的爱，关系明朗。",career:"大成功、高光时刻、被看见。",health:"精力旺盛，状态极佳。",advice:"尽情发光，好运正盛。"},
+{n:32,name:"月亮",latin:"Moon",suit:"♥",code:"8",pol:0,kw:"直觉 · 情绪 · 潜意识 · 夜",
+ meaning:"月亮代表直觉、情绪与潜意识。事情在暗处运作，需要倾听内心。",
+ love:"感情细腻敏感，有隐秘的情绪。",career:"直觉指引，但信息不全，别只靠猜测。",health:"注意睡眠与情绪波动。",advice:"相信直觉，但把暗处照亮再决定。"},
+{n:33,name:"钥匙",latin:"Key",suit:"♦",code:"8",pol:1,kw:"答案 · 开启 · 关键 · 解决",
+ meaning:"钥匙代表答案与开启。谜底揭开，问题解决，关键就在眼前。",
+ love:"关系有突破，误会解开。",career:"瓶颈打通，方案落地，问题解决。",health:"找到症结，康复有望。",advice:"你已握有钥匙，去打开那扇门。"},
+{n:34,name:"鱼",latin:"Fish",suit:"♥",code:"K",pol:1,kw:"财富 · 生意 · 丰盛 · 流动",
+ meaning:"游动的鱼，象征财富、生意与丰盛。金钱在流动，物质回报可期。",
+ love:"感情滋养，付出有回报。",career:"生意兴隆、业绩增长、财运佳。",health:"注意营养与水分。",advice:"让财富流动起来，该出手时就出手。"},
+{n:35,name:"锚",latin:"Anchor",suit:"♣",code:"10",pol:1,kw:"稳定 · 坚持 · 归属 · 长期",
+ meaning:"沉重的锚，象征稳定、坚持与归属。安定的状态，长期的事业与关系。",
+ love:"关系稳定长久，值得托付。",career:"根基扎实，适合长期主义。",health:"状态稳定，注意别太懒散。",advice:"稳住，坚持，长期主义会赢。"},
+{n:36,name:"十字架",latin:"Cross",suit:"♣",code:"6",pol:-1,kw:"负担 · 试炼 · 命运 · 信念",
+ meaning:"十字架象征负担、试炼与命运的安排。一段艰难的路，但有信念就有意义。",
+ love:"感情有考验，需要包容与牺牲。",career:"压力大、任务重，是锻炼也是磨砺。",health:"注意劳逸结合，心理负担重。",advice:"扛住试炼，信念会带你穿过。"}
+];
+
+/* ============ 牌阵定义 ============ */
+const SPREADS = {
+"3":{name:"三张牌阵",en:"Three-Card",count:3,desc:"过去 · 现在 · 未来，快速看清一件事的来龙去脉与走向。",
+     positions:[{k:"过去",m:"过去的状况与起因"},{k:"现在",m:"当下的处境与关键"},{k:"未来",m:"未来的发展走向"}]},
+"5":{name:"五张牌阵",en:"Five-Card",count:5,desc:"由表及里，看清现状、影响、隐情、助力与最终结果。",
+     positions:[{k:"现状",m:"你当下的整体处境"},{k:"近期影响",m:"正在发生、影响你的因素"},{k:"隐藏因素",m:"尚未显化的内在动因"},{k:"助力建议",m:"可以依靠的力量或行动方向"},{k:"最终结果",m:"事情发展的最终走向"}]},
+"cross":{name:"十字牌阵",en:"Cross",count:5,desc:"以十字方位展开，从核心到外围看全局：未来、根基、内在与外在。",
+     positions:[{k:"核心",m:"整件事的核心与当下焦点"},{k:"上方 · 未来",m:"将要到来的趋势"},{k:"下方 · 根基",m:"过去的根基与缘由"},{k:"左侧 · 内在",m:"隐藏的潜意识因素"},{k:"右侧 · 显现",m:"外在可见的环境因素"}]},
+"9":{name:"九张牌阵",en:"Nine-Card",count:9,desc:"三乘三矩阵，过去、现在、未来层层展开，信息量更完整。",
+     positions:[{k:"过去状况",m:"过去的总体状况"},{k:"过去影响",m:"过去对现在的影响"},{k:"根源教训",m:"事情的根本缘起"},{k:"当前处境",m:"现在的处境"},{k:"核心议题",m:"你真正面对的核心"},{k:"助力阻力",m:"当下的助力或阻力"},{k:"近期发展",m:"近期的演变"},{k:"未来趋势",m:"未来的趋势走向"},{k:"最终结果",m:"最终的归宿与结果"}]},
+"gt":{name:"三十六张大牌阵",en:"Grand Tableau",count:36,desc:"全部三十六张牌一次铺开，从全局俯瞰人生的各大领域。",
+     positions:null}
+};
+
+/* ============ 大牌阵三十六宫位含义 ============ */
+const HOUSES = [
+"消息与行动的宫位：主题围绕讯息、访问与快速的进展。",
+"小幸运的宫位：主题围绕机遇、好运与转瞬即逝的运气。",
+"旅行的宫位：主题围绕远方、迁移与行程安排。",
+"家庭的宫位：主题围绕家人、房产与安定的根基。",
+"健康的宫位：主题围绕身体状况与长期成长。",
+"混乱的宫位：主题围绕迷茫、犹豫与不明朗的局面。",
+"欺骗的宫位：主题围绕隐藏的算计与复杂关系。",
+"结束的宫位：主题围绕某个阶段的终结与转化。",
+"礼物的宫位：主题围绕馈赠、邀请与愉悦之事。",
+"骤变的宫位：主题围绕突然的变化与当断则断。",
+"冲突的宫位：主题围绕争吵、竞争与反复拉锯。",
+"沟通的宫位：主题围绕交谈、消息与心神不宁。",
+"新开始的宫位：主题围绕新项目、新缘分与纯真。",
+"谋略的宫位：主题围绕职场算计与谨慎行事。",
+"力量的宫位：主题围绕权威、保护与资源支持。",
+"希望的宫位：主题围绕灵感、目标与明确的指引。",
+"变化的宫位：主题围绕迁移、调整与生活的新阶段。",
+"忠诚的宫位：主题围绕友谊、信任与可靠的支持。",
+"独立的宫位：主题围绕孤独、体制与自力更生。",
+"社交的宫位：主题围绕人脉、聚会与公众形象。",
+"障碍的宫位：主题围绕延迟、瓶颈与需要绕过的难题。",
+"选择的宫位：主题围绕决策、分岔口与取舍。",
+"损耗的宫位：主题围绕流失、焦虑与小损失。",
+"情感的宫位：主题围绕爱情、真心与情绪流动。",
+"承诺的宫位：主题围绕婚约、合同与长期结合。",
+"秘密的宫位：主题围绕隐藏信息、学习与未知。",
+"文书的宫位：主题围绕信件、通知与正式信息。",
+"男性与行动的宫位：主题围绕男性角色或主动出击。",
+"女性与直觉的宫位：主题围绕女性角色或直觉感应。",
+"成熟的宫位：主题围绕平静、品质与和谐相处。",
+"成功的宫位：主题围绕荣耀、活力与高光时刻。",
+"直觉的宫位：主题围绕情绪、潜意识与暗处之事。",
+"答案的宫位：主题围绕关键突破口与问题的解决。",
+"财富的宫位：主题围绕生意、财运与物质丰盛。",
+"稳定的宫位：主题围绕坚持、归属与长期主义。",
+"试炼的宫位：主题围绕负担、考验与命运的功课。"
+];
+
+/* ============ 牌面联动规则 ============ */
+const COMBOS = [
+ {a:1,b:27,t:"骑士遇信件：消息将至，重要的讯息已在路上。"},
+ {a:1,b:12,t:"骑士遇小鸟：口信与交谈频繁，沟通加速。"},
+ {a:24,b:25,t:"心遇戒指：爱情的承诺与结合，婚约可期。"},
+ {a:31,b:24,t:"太阳遇心：热烈而明亮的真爱。"},
+ {a:8,b:31,t:"棺材遇太阳：低谷之后的重大转机。"},
+ {a:8,b:16,t:"棺材遇星星：旧局结束，新的希望在升起。"},
+ {a:21,b:33,t:"山遇钥匙：障碍将被解开，难题有解。"},
+ {a:34,b:35,t:"鱼遇锚：财富趋于稳定，守住即得。"},
+ {a:6,b:7,t:"云遇蛇：迷雾与隐情叠加，谨防欺骗。"},
+ {a:36,b:8,t:"十字架遇棺材：一段沉重考验接近尾声。"},
+ {a:13,b:9,t:"小孩遇花束：崭新的美好开始，值得期待。"},
+ {a:3,b:22,t:"船遇岔路：关于远方与新方向的选择。"},
+ {a:23,b:26,t:"老鼠遇书本：秘密被消耗，谨防信息泄露。"},
+ {a:19,b:18,t:"高塔遇狗：机构之中有可靠伙伴相助。"},
+ {a:31,b:33,t:"太阳遇钥匙：一切豁然开朗，答案呼之欲出。"},
+ {a:16,b:34,t:"星星遇鱼：愿望与财富的双重加持。"}
+];
+
+/* ============ 工具函数 ============ */
+function polInfo(s){
+  if(s>=1)return {t:"吉",cls:"g"};
+  if(s===0.5)return {t:"偏吉",cls:"pg"};
+  if(s===0)return {t:"中",cls:"n"};
+  if(s===-0.5)return {t:"偏凶",cls:"pr"};
+  return {t:"凶",cls:"r"};
+}
+function shuffled(arr){
+  const a=arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    const t=a[i];a[i]=a[j];a[j]=t;
+  }
+  return a;
+}
+function byId(id){return document.getElementById(id);}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+/* ============ 全局状态 ============ */
+const state={t:"3",gender:localStorage.getItem("ln_gender")||"female",drawn:[],phase:"idle"};
+function setGender(g){state.gender=g;localStorage.setItem("ln_gender",g);syncGenderUI();}
+
+/* ============ 卡牌元素 ============ */
+function cardEl(card,cls){
+  const d=document.createElement("div");
+  d.className="card"+(cls?" "+cls:"");
+  d.dataset.n=card.n;
+  d.setAttribute("role","button");
+  d.setAttribute("aria-label",card.name+"牌");
+  const suitCls=SUIT_RED.includes(card.suit)?"suit-red":"suit-black";
+  const st=card.suit+"\uFE0E";
+  d.innerHTML=
+   '<div class="card-inner">'+
+     '<div class="card-back">'+
+       '<svg class="back-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/><path d="M12 6l1.2 3.8L17 11l-3.8 1.2L12 16l-1.2-3.8L7 11l3.8-1.2z" opacity=".5"/></svg>'+
+       '<span class="back-label">Lenormand</span>'+
+     '</div>'+
+     '<div class="card-face">'+
+       '<span class="corner tl"><span class="suit-s '+suitCls+'">'+st+'</span>'+card.code+'</span>'+
+       '<span class="corner br"><span class="suit-s '+suitCls+'">'+st+'</span>'+card.code+'</span>'+
+       '<div class="card-body">'+
+         '<span class="c-no">'+card.n+'</span>'+
+         '<span class="c-suit '+suitCls+'">'+st+'</span>'+
+         '<span class="c-name">'+card.name+'</span>'+
+         '<span class="c-latin">'+card.latin+'</span>'+
+       '</div>'+
+     '</div>'+
+   '</div>';
+  d.addEventListener("click",()=>openModal(card));
+  return d;
+}
+
+/* ============ 弹窗 ============ */
+function openModal(card){
+  const p=polInfo(card.pol);
+  byId("modal-box").innerHTML=
+   '<button class="m-close" id="m-close" aria-label="关闭">×</button>'+
+   '<div class="m-head">'+
+     cardEl(card).outerHTML+
+     '<div>'+
+       '<div class="m-title">'+card.n+' · '+card.name+'<small>'+card.latin+' · '+card.suit+card.code+'</small></div>'+
+       '<div class="m-no">'+esc(card.suit+"\uFE0E"+card.code)+' · 扑克对应</div>'+
+     '</div>'+
+   '</div>'+
+   '<div class="m-kw">'+card.kw.split(" · ").map(k=>"<span>"+esc(k)+"</span>").join("")+'</div>'+
+   '<div class="m-sec"><h5>牌意</h5><p>'+esc(card.meaning)+'</p></div>'+
+   '<div class="m-sec"><h5>爱情</h5><p>'+esc(card.love)+'</p></div>'+
+   '<div class="m-sec"><h5>事业 · 财运</h5><p>'+esc(card.career)+'</p></div>'+
+   '<div class="m-sec"><h5>健康</h5><p>'+esc(card.health)+'</p></div>'+
+   '<div class="m-sec"><h5>给你的建议</h5><p>'+esc(card.advice)+'</p></div>';
+  byId("modal").hidden=false;
+  byId("modal-backdrop").onclick=closeModal;
+  byId("m-close").onclick=closeModal;
+  document.body.style.overflow="hidden";
+}
+function closeModal(){byId("modal").hidden=true;document.body.style.overflow="";}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+
+/* ============ 路由 ============ */
+function parseHash(){
+  const h=location.hash||"#home";
+  const q=h.indexOf("?");
+  const path=q===-1?h.slice(1):h.slice(1,q);
+  const params=new URLSearchParams(q===-1?"":h.slice(q+1));
+  return {path:path||"home",t:params.get("t")||"3"};
+}
+function render(){
+  const {path,t}=parseHash();
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
+  document.querySelectorAll(".topnav a").forEach(a=>a.classList.toggle("on",a.dataset.nav===path));
+  if(path==="home"){
+    byId("view-home").classList.add("on");
+    buildSpreadGrid();
+  }else if(path==="spread"){
+    byId("view-spread").classList.add("on");
+    initSpread(t);
+  }else if(path==="library"){
+    byId("view-library").classList.add("on");
+    buildLibrary();
+  }else{
+    byId("view-home").classList.add("on");
+    buildSpreadGrid();
+  }
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",render);
+
+/* ============ 首页牌阵卡片 ============ */
+function buildSpreadGrid(){
+  const grid=byId("spread-grid");
+  if(grid.dataset.built)return;
+  grid.dataset.built="1";
+  const order=["3","5","cross","9","gt"];
+  grid.innerHTML=order.map(k=>{
+    const s=SPREADS[k];
+    const cardCnt=s.count===36?"三十六张":s.count+" 张";
+    const posTxt=s.positions?("位次："+s.positions.map(p=>p.k).join(" · ")):"代表牌定位 · 三十六宫位全览";
+    return '<a class="spread-card" href="#spread?t='+k+'">'+
+      '<span class="sc-count">'+cardCnt+'</span>'+
+      '<div class="sc-name">'+s.name+'</div>'+
+      '<div class="sc-en">'+s.en+'</div>'+
+      '<p class="sc-desc">'+s.desc+'</p>'+
+      '<div class="sc-pos">'+posTxt+'</div>'+
+    '</a>';
+  }).join("");
+}
+
+/* ============ 占卜页初始化 ============ */
+function initSpread(t){
+  if(!SPREADS[t])t="3";
+  state.t=t;
+  state.drawn=[];
+  state.phase="idle";
+  const s=SPREADS[t];
+  byId("s-name").textContent=s.name;
+  byId("s-desc").textContent=s.desc;
+  byId("gt-setup").hidden=t!=="gt";
+  if(t==="gt")syncGenderUI();
+  byId("btn-draw").hidden=false;
+  byId("deck-stage").hidden=true;
+  byId("cards-area").innerHTML="";
+  byId("result").hidden=true;
+  byId("result-actions").hidden=true;
+  byId("btn-draw").disabled=false;
+  byId("btn-draw").textContent="洗牌 · 抽牌";
+}
+function syncGenderUI(){
+  document.querySelectorAll("#seg-gender button").forEach(b=>{
+    b.classList.toggle("on",b.dataset.g===state.gender);
+    b.onclick=()=>setGender(b.dataset.g);
+  });
+}
+
+/* ============ 抽牌流程 ============ */
+byId("btn-draw").addEventListener("click",startDraw);
+byId("btn-redraw").addEventListener("click",()=>{
+  byId("result").hidden=true;
+  byId("result-actions").hidden=true;
+  startDraw();
+});
+byId("modal").addEventListener("click",e=>{if(e.target===byId("modal"))closeModal();});
+
+function startDraw(){
+  if(state.phase==="dealing")return;
+  const t=state.t,s=SPREADS[t];
+  state.phase="dealing";
+  const btn=byId("btn-draw");
+  btn.disabled=true;
+  byId("deck-stage").hidden=false;
+  byId("pile").classList.add("shaking");
+  byId("cards-area").innerHTML="";
+  byId("result").hidden=true;
+  byId("result-actions").hidden=true;
+  const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setTimeout(()=>{
+    state.drawn=shuffled(CARDS).slice(0,s.count);
+    byId("deck-stage").hidden=true;
+    byId("pile").classList.remove("shaking");
+    renderCards(reduced,()=>{
+      state.phase="done";
+      btn.disabled=false;
+      btn.textContent="重新洗牌 · 抽牌";
+      renderResult();
+      byId("result-actions").hidden=false;
+      byId("result").hidden=false;
+      setTimeout(()=>{const r=byId("result");window.scrollTo(0,Math.max(0,r.getBoundingClientRect().top+window.scrollY-90));},120);
+    });
+  },reduced?0:1500);
+}
+
+/* 牌阵布局与翻牌动画 */
+function renderCards(reduced,done){
+  const t=state.t,s=SPREADS[t];
+  const area=byId("cards-area");
+  const container=document.createElement("div");
+  const wrapCls={
+    "3":"cards-row","5":"cards-row","cross":"cross-grid","9":"nine-grid","gt":"gt-grid"
+  }[t];
+  container.className=wrapCls;
+  if(t==="gt"){
+    const qn=state.gender==="male"?28:29;
+    state.qIdx=state.drawn.findIndex(c=>c.n===qn);
+    state.drawn.forEach((c,i)=>{
+      const cell=document.createElement("div");
+      cell.className="cell";
+      const el=cardEl(c,"tiny");
+      if(i===state.qIdx)el.classList.add("qmark");
+      else if(isNear(state.qIdx,i))el.classList.add("near");
+      cell.appendChild(el);
+      container.appendChild(cell);
+    });
+  }else if(t==="cross"){
+    const order=[0,1,2,3,4];
+    const clsMap={0:"c-mid",1:"c-top",2:"c-bottom",3:"c-left",4:"c-right"};
+    order.forEach(i=>{
+      const cell=document.createElement("div");
+      cell.className="cell "+clsMap[i];
+      cell.appendChild(cardEl(state.drawn[i],"mini"));
+      const label=document.createElement("span");
+      label.className="pos-label";
+      label.textContent=s.positions[i].k;
+      cell.appendChild(label);
+      container.appendChild(cell);
+    });
+  }else if(t==="9"){
+    state.drawn.forEach((c,i)=>{
+      const cell=document.createElement("div");
+      cell.className="cell";
+      cell.appendChild(cardEl(c,"mini"));
+      const label=document.createElement("span");
+      label.className="pos-label";
+      label.textContent=s.positions[i].k;
+      cell.appendChild(label);
+      container.appendChild(cell);
+    });
+  }else{
+    state.drawn.forEach((c,i)=>{
+      const cell=document.createElement("div");
+      cell.className="cell";
+      cell.appendChild(cardEl(c));
+      const label=document.createElement("span");
+      label.className="pos-label";
+      label.textContent=s.positions[i].k;
+      cell.appendChild(label);
+      container.appendChild(cell);
+    });
+  }
+  area.appendChild(container);
+  const cards=container.querySelectorAll(".card");
+  const delay=reduced?0:t==="gt"?55:420;
+  cards.forEach((el,i)=>{
+    setTimeout(()=>el.classList.add("flipped"),delay*(i+1)+ (reduced?0:300));
+  });
+  const total=delay*cards.length+(reduced?0:500);
+  setTimeout(done,total);
+}
+function isNear(qi,i){
+  if(qi<0)return false;
+  const r=Math.floor(qi/8),c=qi%8;
+  const rr=Math.floor(i/8),cc=i%8;
+  return Math.abs(rr-r)<=1&&Math.abs(cc-c)<=1&&!(rr===r&&cc===c);
+}
+
+/* ============ 吉凶判断与解读 ============ */
+function renderResult(){
+  const t=state.t;
+  if(t==="gt")renderGTResult();
+  else renderSpreadResult(t);
+}
+
+function verdictOf(scores){
+  const total=scores.reduce((a,b)=>a+b,0);
+  let label,cls,text;
+  if(total>=2.5){label="大吉";cls="lucky";text="整体牌面大吉，能量充沛、心想事成的征兆很强，方向可以放心大胆地走下去。";}
+  else if(total>=1){label="吉";cls="lucky";text="整体偏吉，主方向向好，好事多于波折，把握好节奏即可。";}
+  else if(total>-1){label="平稳";cls="flat";text="整体运势平稳，有吉有凶，关键在你自己如何选择与应对。";}
+  else if(total>=-2.5){label="凶";cls="risk";text="整体偏凶，前路多有考验，宜谨慎行事、稳中求进。";}
+  else{label="大凶";cls="risk";text="整体牌面偏凶，建议放缓脚步、避免冲动决策，先保护好自己。";}
+  return {total,label,cls,text};
+}
+function countsOf(cards){
+  let g=0,n=0,r=0;
+  cards.forEach(c=>{if(c.pol>0)g++;else if(c.pol<0)r++;else n++;});
+  return {g,n,r};
+}
+function meterHtml(total,maxAbs){
+  const pct=Math.max(4,Math.min(96,((total+maxAbs)/(2*maxAbs))*100));
+  return '<div class="meter"><div class="meter-fill" style="width:'+pct+'%"></div></div>';
+}
+function comboHits(cards){
+  const set=new Set(cards.map(c=>c.n));
+  return COMBOS.filter(c=>set.has(c.a)&&set.has(c.b));
+}
+function adviceOf(cards,t){
+  const s=SPREADS[t];
+  const order=s.positions.map((_,i)=>i);
+  const last=order[order.length-1];
+  const pool=[];
+  const lastCard=cards[last];
+  if(lastCard)pool.push(lastCard);
+  const good=cards.filter(c=>c.pol>0).sort((a,b)=>b.pol-a.pol)[0];
+  const bad=cards.filter(c=>c.pol<0).sort((a,b)=>a.pol-b.pol)[0];
+  if(good&&good!==lastCard)pool.push(good);
+  if(bad&&bad!==lastCard&&bad!==good)pool.push(bad);
+  const seen=new Set();const list=[];
+  pool.forEach(c=>{if(!seen.has(c.advice)){seen.add(c.advice);list.push(c.advice);}});
+  return list.slice(0,3);
+}
+
+function renderSpreadResult(t){
+  const s=SPREADS[t];
+  const cards=state.drawn;
+  const scores=cards.map(c=>c.pol);
+  const v=verdictOf(scores);
+  const cnt=countsOf(cards);
+  const combos=comboHits(cards);
+  const adv=adviceOf(cards,t);
+  const goodNames=cards.filter(c=>c.pol>0).sort((a,b)=>b.pol-a.pol).slice(0,2).map(c=>c.name).join("、");
+  const badNames=cards.filter(c=>c.pol<0).sort((a,b)=>a.pol-b.pol).slice(0,2).map(c=>c.name).join("、");
+  const summary="抽得吉牌 "+cnt.g+" 张、中牌 "+cnt.n+" 张、凶牌 "+cnt.r+" 张。"+
+    (goodNames?" 吉象集中在"+goodNames+"，带来"+(cnt.g>1?"双重加持":"助力")+"。":"")+
+    (badNames?" 需要留意"+badNames+"带来的"+((cards.find(c=>c.pol<0)||{}).pol<=-1?"考验":"干扰")+"。":"")+
+    " 综合来看，"+v.text;
+
+  const posHtml=cards.map((c,i)=>{
+    const p=polInfo(c.pol);
+    const pos=s.positions[i];
+    return '<div class="interpret-item" style="border-left-color:var(--'+(p.cls==="g"||p.cls==="pg"?"jade":p.cls==="r"||p.cls==="pr"?"crimson":"steel")+')">'+
+      cardEl(c,"mini").outerHTML+
+      '<div style="flex:1;min-width:0">'+
+        '<div class="it-head"><span class="it-pos">'+pos.k+'</span><span class="it-name">'+c.name+'</span><span class="badge '+p.cls+'">'+p.t+'</span></div>'+
+        '<div class="it-posm">'+pos.m+'</div>'+
+        '<div class="it-kw">'+esc(c.kw)+'</div>'+
+        '<div class="it-meaning">'+esc(c.meaning)+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join("");
+
+  byId("result").innerHTML=
+   '<div class="verdict">'+
+     '<div class="verdict-top">'+
+       '<span class="v-label '+v.cls+'">吉凶：'+v.label+'</span>'+
+       '<span class="v-counts"><span class="g">吉 <b>'+cnt.g+'</b></span><span class="n">中 <b>'+cnt.n+'</b></span><span class="r">凶 <b>'+cnt.r+'</b></span></span>'+
+     '</div>'+
+     meterHtml(v.total,s.count)+
+     '<p class="v-text">'+summary+'</p>'+
+     (combos.length?'<div class="combos">'+combos.map(c=>'<span class="combo-tag">'+esc(c.t)+'</span>').join("")+'</div>':"")+
+     (adv.length?'<div class="advice"><h4>给你的建议</h4><ul>'+adv.map(a=>"<li>"+esc(a)+"</li>").join("")+'</ul></div>':"")+
+   '</div>'+
+   '<h2 class="sec-title" style="font-size:20px">逐位解读<small>POSITIONS</small></h2>'+
+   '<div class="interpret-list">'+posHtml+'</div>';
+}
+
+/* 大牌阵结果 */
+function renderGTResult(){
+  const cards=state.drawn;
+  const qn=state.gender==="male"?28:29;
+  const qIdx=state.qIdx;
+  const qCard=cards[qIdx];
+  const cntAll=countsOf(cards);
+  const nearIdx=[];
+  for(let i=0;i<36;i++)if(isNear(qIdx,i))nearIdx.push(i);
+  const nearCards=nearIdx.map(i=>cards[i]);
+  const cntNear=countsOf(nearCards);
+  const below=cards[qIdx+8]||null;
+  const house=HOUSES[qIdx];
+  const rel=relLabel(qIdx);
+  const v=verdictOf(nearCards.map(c=>c.pol));
+  const gAll=cards.filter(c=>c.pol>0).sort((a,b)=>b.pol-a.pol);
+  const bAll=cards.filter(c=>c.pol<0).sort((a,b)=>a.pol-b.pol);
+  const dirNames=["上方 · 背景","下方 · 发展","左侧 · 已过","右侧 · 将至","左上 · 潜在","右上 · 潜在","左下 · 潜在","右下 · 潜在"];
+  const dirMap={};
+  const r=Math.floor(qIdx/8),c=qIdx%8;
+  const cells=[[-1,0,0],[1,0,1],[0,-1,2],[0,1,3],[-1,-1,4],[-1,1,5],[1,-1,6],[1,1,7]];
+  cells.forEach(([dr,dc,di])=>{
+    const rr=r+dr,cc=c+dc;
+    if(rr>=0&&rr<=4&&cc>=0&&cc<=7){
+      const i=rr*8+cc;
+      if(i>=0&&i<36)dirMap[i]=di;
+    }
+  });
+  const nearHtml=nearIdx.map(i=>{
+    const c=cards[i];
+    const p=polInfo(c.pol);
+    return '<div class="interpret-item" style="border-left-color:var(--'+(p.cls==="g"||p.cls==="pg"?"jade":p.cls==="r"||p.cls==="pr"?"crimson":"steel")+')">'+
+      cardEl(c,"mini").outerHTML+
+      '<div style="flex:1;min-width:0">'+
+        '<div class="it-head"><span class="it-pos">'+dirNames[dirMap[i]]+'</span><span class="it-name">'+c.name+'</span><span class="badge '+p.cls+'">'+p.t+'</span></div>'+
+        '<div class="it-meaning">'+esc(c.meaning)+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join("");
+
+  byId("result").innerHTML=
+   '<div class="verdict">'+
+     '<div class="verdict-top">'+
+       '<span class="v-label '+v.cls+'">近期运势：'+v.label+'</span>'+
+       '<span class="v-counts"><span class="g">全局吉 <b>'+cntAll.g+'</b></span><span class="n">全局中 <b>'+cntAll.n+'</b></span><span class="r">全局凶 <b>'+cntAll.r+'</b></span></span>'+
+     '</div>'+
+     meterHtml(v.total,8)+
+     '<p class="v-text">你的代表牌「'+(qn===28?"男人":"女人")+'」落在第 '+(qIdx+1)+' 宫（'+(rel)+'）。'+house+'</p>'+
+     '<p class="v-text">围绕你的 '+nearCards.length+' 张邻近牌中：吉牌 '+cntNear.g+' 张、中牌 '+cntNear.n+' 张、凶牌 '+cntNear.r+' 张，近期运势 '+v.text+'</p>'+
+     '<p class="v-text">全局共 '+(cntAll.g>cntAll.r?"以吉象为主":"凶象偏多")+'：吉牌 '+cntAll.g+' 张、凶牌 '+cntAll.r+' 张。'+
+       (gAll.length?' 最强的吉象来自'+gAll.slice(0,2).map(c=>c.name).join("、")+"。":"")+
+       (bAll.length?' 最需警惕的是'+bAll.slice(0,2).map(c=>c.name).join("、")+"。":"")+
+       (below?' 你的代表牌正下方是「'+below.name+'」，常被视为这件事的建议与落点：'+below.meaning:"")+
+     '</p>'+
+   '</div>'+
+   '<h2 class="sec-title" style="font-size:20px">你周围的牌<small>NEARBY CARDS</small></h2>'+
+   '<p class="sec-sub">以「'+(qn===28?"男人":"女人")+'」牌为中心，左为已过、右为将至、上为背景、下为发展，四角为潜在因素。</p>'+
+   '<div class="gt-legend"><span><i style="background:var(--gold)"></i>金色框：你的代表牌</span><span><i style="background:var(--jade)"></i>绿色框：邻近八张</span></div>'+
+   '<div class="interpret-list">'+nearHtml+'</div>';
+}
+function relLabel(qIdx){
+  const r=Math.floor(qIdx/8)+1,c=(qIdx%8)+1;
+  return r+"行"+c+"列";
+}
+
+/* ============ 牌意速查 ============ */
+function buildLibrary(){
+  const grid=byId("lib-grid");
+  if(grid.dataset.built)return;
+  grid.dataset.built="1";
+  CARDS.forEach(c=>{grid.appendChild(cardEl(c));});
+}
+
+/* ============ 启动 ============ */
+render();
+</script>
+</body>
+</html>
