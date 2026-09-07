@@ -157,6 +157,9 @@ img{max-width:100%;display:block}
   background:transparent;color:var(--text-dim);border:none;transition:background .2s,color .2s;
 }
 .seg button.on{background:var(--gold);color:#241d10;font-weight:600}
+.mode-desc{margin-top:10px;font-size:12.5px;color:var(--text-dim)}
+.cell-center .pos-label{color:var(--gold-bright);font-weight:600}
+.cell-center .card{box-shadow:0 0 0 2px var(--gold),0 8px 20px rgba(0,0,0,.4)}
 /* 洗牌动画：牌堆 */
 .deck-stage{
   display:flex;align-items:center;justify-content:center;gap:18px;
@@ -186,19 +189,15 @@ img{max-width:100%;display:block}
 .cards-area{width:100%;display:flex;justify-content:center}
 .cards-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:flex-start}
 .card{
-  width:150px;perspective:1000px;cursor:pointer;
+  width:150px;cursor:pointer;
   transition:transform .18s;
+  animation:cardIn .5s ease both;
 }
+@keyframes cardIn{from{opacity:0}to{opacity:1}}
 .card:hover{transform:translateY(-4px)}
-.card-inner{position:relative;width:100%;aspect-ratio:5/7;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.4,.2,.2,1)}
-.card.flipped .card-inner{transform:rotateY(180deg)}
-.card-face,.card-back{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px}
-.card-back{
-  background:radial-gradient(circle at 32% 26%,#2a3560,#161d36 72%);
-  border:2px solid var(--gold);
-  box-shadow:0 8px 20px rgba(0,0,0,.45);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
-}
+.card-inner{position:relative;width:100%;aspect-ratio:5/7}
+.card-face{position:absolute;inset:0;border-radius:12px}
+.card-back{display:none}
 .back-star{width:58px;height:58px;color:var(--gold-bright);opacity:.9}
 .back-label{font-size:8.5px;letter-spacing:.34em;color:var(--gold);text-transform:uppercase}
 .card-face{
@@ -442,6 +441,15 @@ footer a{color:var(--gold-bright)}
         <button data-g="male" type="button">男性</button>
       </div>
     </div>
+    <div id="mode9" class="gt-setup" hidden>
+      <p>选择九张牌阵的占卜方式</p>
+      <div class="seg" id="seg-mode9">
+        <button data-m="div" type="button">九张占卜</button>
+        <button data-m="lost" type="button">寻物占卜</button>
+        <button data-m="fengshui" type="button">风水九宫</button>
+      </div>
+      <p class="mode-desc" id="mode9-desc"></p>
+    </div>
     <div class="table-area">
       <button id="btn-draw" class="btn btn-gold btn-big" type="button">洗牌 · 抽牌</button>
       <div id="deck-stage" class="deck-stage" hidden>
@@ -602,11 +610,50 @@ const SPREADS = {
      positions:[{k:"现状",m:"你当下的整体处境"},{k:"近期影响",m:"正在发生、影响你的因素"},{k:"隐藏因素",m:"尚未显化的内在动因"},{k:"助力建议",m:"可以依靠的力量或行动方向"},{k:"最终结果",m:"事情发展的最终走向"}]},
 "cross":{name:"十字牌阵",en:"Cross",count:5,desc:"以十字方位展开，从核心到外围看全局：未来、根基、内在与外在。",
      positions:[{k:"核心",m:"整件事的核心与当下焦点"},{k:"上方 · 未来",m:"将要到来的趋势"},{k:"下方 · 根基",m:"过去的根基与缘由"},{k:"左侧 · 内在",m:"隐藏的潜意识因素"},{k:"右侧 · 显现",m:"外在可见的环境因素"}]},
-"9":{name:"九张牌阵",en:"Nine-Card",count:9,desc:"三乘三矩阵，过去、现在、未来层层展开，信息量更完整。",
+"9":{name:"九张牌阵",en:"Nine-Card",count:9,desc:"三乘三矩阵，另含寻物占卜与风水九宫两种玩法。",
      positions:[{k:"过去状况",m:"过去的总体状况"},{k:"过去影响",m:"过去对现在的影响"},{k:"根源教训",m:"事情的根本缘起"},{k:"当前处境",m:"现在的处境"},{k:"核心议题",m:"你真正面对的核心"},{k:"助力阻力",m:"当下的助力或阻力"},{k:"近期发展",m:"近期的演变"},{k:"未来趋势",m:"未来的趋势走向"},{k:"最终结果",m:"最终的归宿与结果"}]},
 "gt":{name:"三十六张大牌阵",en:"Grand Tableau",count:36,desc:"全部三十六张牌一次铺开，从全局俯瞰人生的各大领域。",
      positions:null}
 };
+
+/* ============ 九张牌阵 · 三种模式 ============ */
+const NINE_MODES={
+  div:{name:"九张占卜",desc:"三乘三矩阵，过去、现在、未来层层展开，信息量更完整。",positions:[
+    {k:"过去状况",m:"过去的总体状况"},{k:"过去影响",m:"过去对现在的影响"},{k:"根源教训",m:"事情的根本缘起"},
+    {k:"当前处境",m:"现在的处境"},{k:"核心议题",m:"你真正面对的核心"},{k:"助力阻力",m:"当下的助力或阻力"},
+    {k:"近期发展",m:"近期的演变"},{k:"未来趋势",m:"未来的趋势走向"},{k:"最终结果",m:"最终的归宿与结果"}]},
+  lost:{name:"寻物占卜",desc:"心中默念丢失之物，抽九张牌：周围八张对应八个方位，中心一张看失物状态。",positions:[
+    {k:"西北",m:"西北方向"},{k:"北",m:"正北方向"},{k:"东北",m:"东北方向"},
+    {k:"西",m:"正西方向"},{k:"中心",m:"失物状态"},{k:"东",m:"正东方向"},
+    {k:"西南",m:"西南方向"},{k:"南",m:"正南方向"},{k:"东南",m:"东南方向"}]},
+  fengshui:{name:"风水九宫",desc:"抽九张牌对应家中九宫方位，判断每个方位的吉凶、易存在问题与调理建议。",positions:[
+    {k:"西北 · 乾",m:"男主人 · 事业权威"},{k:"北 · 坎",m:"财运 · 事业"},{k:"东北 · 艮",m:"子孙 · 人丁"},
+    {k:"西 · 兑",m:"子女 · 口舌"},{k:"中宫",m:"整体气场"},{k:"东 · 震",m:"健康 · 行动"},
+    {k:"西南 · 坤",m:"女主人 · 婚姻"},{k:"南 · 离",m:"名声 · 喜庆"},{k:"东南 · 巽",m:"文昌 · 学业"}]}
+};
+/* 寻物 · 八个方位对应的家中环境提示（顺序：左上、上、右上、左、中、右、左下、下、右下） */
+const LOST_ENV=["书房、办公室、高处、男主人房间","水边、卫生间、厨房、房屋后侧","书房、储藏室、高处角落、晚辈房间","厨房、卫生间、金属物品旁、孩子房间","","门口、客厅东侧、车辆附近","卧室、衣柜、长辈房间、收纳处","明亮处、客厅中部、电器附近、阳台","餐厅、窗户、通风处"];
+/* 寻物 · 三十六张牌各一句找物提示（按牌号 1-36） */
+const LOST_HINTS=[
+ "可能在门口、走廊或常走动经过的地方，问问他人口风。","可能在不起眼的角落，随手一放的地方，再快速找一遍。","可能在车上、行李箱或靠门处，也可能已被带离家。","应该还在家里，多在客厅、中心区域或家人手中。","可能在绿植旁、柜子底层或长期不动的角落。","位置模糊，可能被杂物遮挡，先整理再找。","可能被他人收起或藏起，留意让你不舒服的地方。","被压着或封在箱盒里，可能被当旧物收走。","在显眼、装饰性的地方，或礼物盒附近。","可能在尖锐工具、剪刀旁，或门边抽屉。","可能在反复取放的地方，如桌面、玄关、常用抽屉。","可能在嘈杂处、电话旁或常交谈的位置附近。","在玩具、书本或孩子常活动的区域。","可能被刻意藏起或顺手放错，留意办公处与文件堆。","被重物压着，或在高处、大件家具附近。","在高处、柜顶或夜里也亮着的地方。","位置可能刚变动过，问问最近搬动过物品的人。","在宠物活动区、孩子房间，或被人妥善收着。","在高处、柜顶、衣橱上层，或独立房间。","在人多聚集处、客厅、公共区域。","被重物压住或放在高处够不到的地方。","可能在两个位置之一，回想最后一次使用它的地方。","可能在角落、缝隙或被损坏，尽快去找。","在卧室、床头，或与纪念物放在一起。","在首饰盒、抽屉、小盒子或收纳格里。","夹在书里、文件堆或书本收纳处。","在桌上、文件堆、邮箱或近期收发过的地方。","在男主人常用处：办公桌、工具间、车里。","在女主人常用处：梳妆台、衣柜、厨房。","在安静的角落、柜子深处或摆放整齐处。","在明亮显眼处，可能一直就在眼前。","在暗处、夜用物品旁，夜里更容易找到。","在锁具旁、门口、钥匙架，或它该在的地方。","在水边、厨房、浴室或盛水容器旁。","没怎么动过，就在原地或被固定收在某处。","可能被放在高处、纪念处，或已较难找回。"];
+/* 寻物 · 中心牌（失物状态）按吉凶 */
+const LOST_STATE=[
+ "失物应该还完好地待在某处，找回的希望较大，别灰心。",
+ "失物应该还在，只是被藏得比较隐蔽，需要耐心翻找。",
+ "失物可能受损、被移走或一时难以找回，做好心理准备，但仍值得再找一遍。"
+];
+/* 风水九宫 · 宫位信息（顺序同上，中宫为第 5 格） */
+const FS_ROOMS=[
+ {name:"西北 · 乾",realm:"男主人 · 事业权威 · 贵人",health:"头部 · 骨骼",issue:"杂物堆积、缺角、金属利器过多",advice:"保持整洁，少放金属杂物，此处宜静不宜动。"},
+ {name:"北 · 坎",realm:"财运 · 事业 · 中男",health:"肾 · 耳 · 泌尿",issue:"漏水、阴冷、水气重、脏乱",advice:"保持干燥通风，宜放水景或蓝黑装饰，忌下水堵塞。"},
+ {name:"东北 · 艮",realm:"子孙 · 人丁 · 少男",health:"脾胃 · 手指",issue:"杂乱低矮、门冲、堆放重物",advice:"保持明亮整洁，宜暖色与土黄色摆件，忌堆积杂物。"},
+ {name:"西 · 兑",realm:"子女 · 口舌 · 少女",health:"肺 · 呼吸道",issue:"尖锐物品、白色过多、噪音",advice:"减少尖锐物与噪音源，宜白金色圆润摆件。"},
+ {name:"中宫",realm:"整体气场 · 全家人",health:"全身 · 脏腑",issue:"大型家具压中、楼梯厕所居中",advice:"保持中宫空旷通透、气流贯通，忌重物久压。"},
+ {name:"东 · 震",realm:"健康 · 事业启动 · 长男",health:"肝 · 胆 · 四肢",issue:"阴暗、堆放杂物、电器过多",advice:"保持明亮，宜绿植增生气，忌杂物堆积。"},
+ {name:"西南 · 坤",realm:"女主人 · 婚姻 · 母亲",health:"脾胃 · 腹部",issue:"重物压迫、湿气重、杂乱",advice:"保持柔和整洁，宜暖色布艺，忌暗沉杂乱。"},
+ {name:"南 · 离",realm:"名声 · 喜庆 · 中女",health:"心 · 眼 · 血压",issue:"红色过重、火气旺、光线过强",advice:"平衡色调，宜木色点缀，忌火气过盛。"},
+ {name:"东南 · 巽",realm:"文昌 · 学业 · 长女",health:"肝胆 · 肩颈",issue:"缺角、通风差、书桌杂乱",advice:"宜设书桌书柜，保持通风明亮，忌堆放杂物。"}
+];
 
 /* ============ 大牌阵三十六宫位含义 ============ */
 const HOUSES = [
@@ -688,8 +735,27 @@ function byId(id){return document.getElementById(id);}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 
 /* ============ 全局状态 ============ */
-const state={t:"3",gender:localStorage.getItem("ln_gender")||"female",drawn:[],phase:"idle"};
+const state={t:"3",gender:localStorage.getItem("ln_gender")||"female",mode:"div",drawn:[],phase:"idle"};
 function setGender(g){state.gender=g;localStorage.setItem("ln_gender",g);syncGenderUI();}
+function setMode(m){
+  state.mode=m;
+  localStorage.setItem("ln_mode9",m);
+  syncMode9UI();
+  byId("cards-area").innerHTML="";
+  byId("result").hidden=true;
+  byId("result-actions").hidden=true;
+  byId("btn-draw").disabled=false;
+  byId("btn-draw").textContent="洗牌 · 抽牌";
+  restoreDeal();
+}
+function syncMode9UI(){
+  document.querySelectorAll("#seg-mode9 button").forEach(b=>{
+    b.classList.toggle("on",b.dataset.m===state.mode);
+    b.onclick=()=>setMode(b.dataset.m);
+  });
+  const md=byId("mode9-desc");
+  if(md)md.textContent=NINE_MODES[state.mode].desc;
+}
 
 /* ============ 卡牌元素 ============ */
 function cardEl(card,cls){
@@ -807,6 +873,13 @@ function initSpread(t){
   byId("s-desc").textContent=s.desc;
   byId("gt-setup").hidden=t!=="gt";
   if(t==="gt")syncGenderUI();
+  if(t==="9"){
+    state.mode=localStorage.getItem("ln_mode9")||"div";
+    byId("mode9").hidden=false;
+    syncMode9UI();
+  }else{
+    byId("mode9").hidden=true;
+  }
   byId("btn-draw").hidden=false;
   byId("deck-stage").hidden=true;
   byId("cards-area").innerHTML="";
@@ -814,6 +887,7 @@ function initSpread(t){
   byId("result-actions").hidden=true;
   byId("btn-draw").disabled=false;
   byId("btn-draw").textContent="洗牌 · 抽牌";
+  restoreDeal();
 }
 function syncGenderUI(){
   document.querySelectorAll("#seg-gender button").forEach(b=>{
@@ -851,6 +925,7 @@ function startDraw(){
       state.phase="done";
       btn.disabled=false;
       btn.textContent="重新洗牌 · 抽牌";
+      saveResult();
       renderResult();
       byId("result-actions").hidden=false;
       byId("result").hidden=false;
@@ -894,13 +969,14 @@ function renderCards(reduced,done){
       container.appendChild(cell);
     });
   }else if(t==="9"){
+    const posArr=NINE_MODES[state.mode].positions;
     state.drawn.forEach((c,i)=>{
       const cell=document.createElement("div");
-      cell.className="cell";
+      cell.className="cell"+(i===4?" cell-center":"");
       cell.appendChild(cardEl(c,"mini"));
       const label=document.createElement("span");
       label.className="pos-label";
-      label.textContent=s.positions[i].k;
+      label.textContent=posArr[i].k;
       cell.appendChild(label);
       container.appendChild(cell);
     });
@@ -918,11 +994,10 @@ function renderCards(reduced,done){
   }
   area.appendChild(container);
   const cards=container.querySelectorAll(".card");
-  const delay=reduced?0:t==="gt"?55:420;
-  cards.forEach((el,i)=>{
-    setTimeout(()=>el.classList.add("flipped"),delay*(i+1)+ (reduced?0:300));
-  });
-  const total=delay*cards.length+(reduced?0:500);
+  /* 抽完直接展示牌面：不做翻转，只做轻微的错峰淡入 */
+  const delay=reduced?0:(t==="gt"?20:70);
+  cards.forEach((el,i)=>{el.style.animationDelay=(i*delay)+"ms";});
+  const total=cards.length*delay+500;
   setTimeout(done,total);
 }
 function isNear(qi,i){
@@ -936,7 +1011,44 @@ function isNear(qi,i){
 function renderResult(){
   const t=state.t;
   if(t==="gt")renderGTResult();
+  else if(t==="9"&&state.mode==="lost")renderLost();
+  else if(t==="9"&&state.mode==="fengshui")renderFengshui();
   else renderSpreadResult(t);
+}
+
+/* 结果持久化：抽完的牌阵一直保留，刷新或切换页面后仍会展示 */
+function resKey(t,m){return "ln_res_"+t+"_"+m;}
+function saveResult(){
+  const t=state.t;
+  try{
+    localStorage.setItem(resKey(t,state.mode),JSON.stringify({mode:state.mode,cards:state.drawn.map(c=>c.n),gender:state.gender,ts:Date.now()}));
+  }catch(e){}
+}
+function loadResult(t,m){
+  try{
+    const raw=localStorage.getItem(resKey(t,m));
+    if(!raw)return null;
+    const o=JSON.parse(raw);
+    if(o.mode!==m)return null;
+    const cards=o.cards.map(n=>CARDS.find(c=>c.n===n)).filter(Boolean);
+    if(cards.length!==SPREADS[t].count)return null;
+    return {cards:cards,gender:o.gender};
+  }catch(e){return null;}
+}
+function restoreDeal(){
+  const t=state.t;
+  const saved=loadResult(t,state.mode);
+  if(!saved)return;
+  state.drawn=saved.cards;
+  if(t==="gt"&&saved.gender){state.gender=saved.gender;syncGenderUI();}
+  byId("btn-draw").disabled=false;
+  byId("btn-draw").textContent="重新洗牌 · 抽牌";
+  renderCards(true,()=>{
+    state.phase="done";
+    renderResult();
+    byId("result").hidden=false;
+    byId("result-actions").hidden=false;
+  });
 }
 
 function verdictOf(scores){
@@ -1019,6 +1131,89 @@ function renderSpreadResult(t){
      (adv.length?'<div class="advice"><h4>给你的建议</h4><ul>'+adv.map(a=>"<li>"+esc(a)+"</li>").join("")+'</ul></div>':"")+
    '</div>'+
    '<h2 class="sec-title" style="font-size:20px">逐位解读<small>POSITIONS</small></h2>'+
+   '<div class="interpret-list">'+posHtml+'</div>';
+}
+
+/* 九张牌阵 · 寻物占卜：八宫定方位 */
+function renderLost(){
+  const cards=state.drawn;
+  const center=cards[4];
+  const stateIdx=center.pol>0?0:(center.pol===0?1:2);
+  const goodIdx=[],badIdx=[],flatIdx=[];
+  cards.forEach((c,i)=>{if(i===4)return;if(c.pol>0)goodIdx.push(i);else if(c.pol<0)badIdx.push(i);else flatIdx.push(i);});
+  const prob=goodIdx.length>=4?"高":(goodIdx.length>=2?"中":"偏低");
+  const probText="找回概率："+prob+"。"+(prob==="高"?"多数方位呈吉象，失物多半还在，放心去找。":prob==="中"?"吉凶参半，仔细找很有希望，别放过任何角落。":"凶象偏多，可能已被收走或较难找回，尽力而为。");
+  const focusNames=goodIdx.map(i=>NINE_MODES.lost.positions[i].k).join("、");
+  const subNames=badIdx.map(i=>NINE_MODES.lost.positions[i].k).join("、");
+  const summary="中心牌「"+center.name+"」："+LOST_STATE[stateIdx]+
+    (focusNames?" 重点搜寻方向："+focusNames+"。":"")+
+    (subNames?" 次要在"+subNames+"方位也值得翻找。":"")+
+    " "+probText;
+  const posHtml=cards.map((c,i)=>{
+    const p=polInfo(c.pol);
+    const isCenter=i===4;
+    const pos=NINE_MODES.lost.positions[i];
+    const border=(p.cls==="g"||p.cls==="pg")?"jade":(p.cls==="r"||p.cls==="pr")?"crimson":"steel";
+    return '<div class="interpret-item" style="border-left-color:var(--'+border+')">'+
+      cardEl(c,"mini").outerHTML+
+      '<div style="flex:1;min-width:0">'+
+        '<div class="it-head"><span class="it-pos">'+pos.k+(isCenter?" · 失物状态":"方向")+'</span><span class="it-name">'+c.name+'</span><span class="badge '+p.cls+'">'+p.t+'</span></div>'+
+        (isCenter
+          ? '<div class="it-meaning">'+LOST_STATE[stateIdx]+'</div>'
+          : '<div class="it-posm">该方位环境：'+LOST_ENV[i]+'</div>'+
+            '<div class="it-kw">'+esc(c.kw)+'</div>'+
+            '<div class="it-meaning">寻物提示：'+LOST_HINTS[c.n-1]+'</div>'+
+            '<div class="it-posm">'+(c.pol>0?"此位呈吉，找回希望较大，优先仔细寻找。":c.pol<0?"此位偏凶，可能被遮挡或藏得较深，也别放过。":"此位平稳，就近检查即可。")+'</div>')+
+      '</div>'+
+    '</div>';
+  }).join("");
+  byId("result").innerHTML=
+   '<div class="verdict">'+
+     '<div class="verdict-top"><span class="v-label lucky">失物寻踪</span><span class="v-counts"><span class="g">吉位 <b>'+goodIdx.length+'</b></span><span class="n">中位 <b>'+flatIdx.length+'</b></span><span class="r">凶位 <b>'+badIdx.length+'</b></span></span></div>'+
+     meterHtml(goodIdx.length-badIdx.length,8)+
+     '<p class="v-text">'+summary+'</p>'+
+   '</div>'+
+   '<h2 class="sec-title" style="font-size:20px">八方寻踪<small>EIGHT DIRECTIONS</small></h2>'+
+   '<p class="sec-sub">以你所在位置为中心：上北下南左西右东，对照家中方位寻找。</p>'+
+   '<div class="interpret-list">'+posHtml+'</div>';
+}
+
+/* 九张牌阵 · 风水九宫：九宫断宅 */
+function renderFengshui(){
+  const cards=state.drawn;
+  const cnt=countsOf(cards);
+  const v=verdictOf(cards.map(c=>c.pol));
+  const goodRooms=[],badRooms=[];
+  cards.forEach((c,i)=>{if(c.pol>0)goodRooms.push(FS_ROOMS[i].name);else if(c.pol<0)badRooms.push(FS_ROOMS[i].name);});
+  const summary="九宫共得吉宫 "+cnt.g+" 个、平宫 "+cnt.n+" 个、凶宫 "+cnt.r+" 个，整体宅运"+v.text+
+    (goodRooms.length?" 吉宫（"+goodRooms.join("、")+"）气场平和，保持整洁并稍加布置即可。":"")+
+    (badRooms.length?" 凶宫（"+badRooms.join("、")+"）需要重点调理，对照下方问题逐项改善。":"");
+  const posHtml=cards.map((c,i)=>{
+    const room=FS_ROOMS[i];
+    const p=polInfo(c.pol);
+    const border=(p.cls==="g"||p.cls==="pg")?"jade":(p.cls==="r"||p.cls==="pr")?"crimson":"steel";
+    const tone=c.pol>0?"此宫气场平和，宜保持并适当加强。":c.pol<0?"此宫气场偏弱，对应问题需要及时调理。":"此宫平稳，留意细节即可。";
+    return '<div class="interpret-item" style="border-left-color:var(--'+border+')">'+
+      cardEl(c,"mini").outerHTML+
+      '<div style="flex:1;min-width:0">'+
+        '<div class="it-head"><span class="it-pos">'+room.name+'</span><span class="it-name">'+c.name+'</span><span class="badge '+p.cls+'">'+p.t+'</span></div>'+
+        '<div class="it-posm">主掌：'+room.realm+' · 对应健康：'+room.health+'</div>'+
+        '<div class="it-kw">'+esc(c.kw)+'</div>'+
+        '<div class="it-meaning">牌意：'+esc(c.meaning)+'</div>'+
+        '<div class="it-posm" style="color:var(--text)">'+tone+'</div>'+
+        '<div class="it-posm" style="color:var(--gold-bright)">易存在问题：'+room.issue+'</div>'+
+        '<div class="it-meaning">调理建议：'+room.advice+' 同时，'+esc(c.advice)+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join("");
+  byId("result").innerHTML=
+   '<div class="verdict">'+
+     '<div class="verdict-top"><span class="v-label '+v.cls+'">宅运：'+v.label+'</span><span class="v-counts"><span class="g">吉宫 <b>'+cnt.g+'</b></span><span class="n">平宫 <b>'+cnt.n+'</b></span><span class="r">凶宫 <b>'+cnt.r+'</b></span></span></div>'+
+     meterHtml(v.total,9)+
+     '<p class="v-text">'+summary+'</p>'+
+   '</div>'+
+   '<h2 class="sec-title" style="font-size:20px">九宫断宅<small>NINE PALACES</small></h2>'+
+   '<p class="sec-sub">以家中中心为原点：上北下南左西右东。中宫为整宅气场，其余八宫对应八方。仅供娱乐参考，理性看待。</p>'+
    '<div class="interpret-list">'+posHtml+'</div>';
 }
 
